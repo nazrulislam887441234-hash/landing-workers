@@ -1,0 +1,12 @@
+name = "ghoti-preview-worker"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# এইখানে আপনার ডোমেইন বসিয়ে দেন - তাহলে আর আলাদা Route করা লাগবে না
+[[routes]]
+pattern = "ghotimarket.com/*"
+zone_name = "ghotimarket.com"
+
+[[routes]]
+pattern = "www.ghotimarket.com/*"
+zone_name = "ghotimarket.com"
