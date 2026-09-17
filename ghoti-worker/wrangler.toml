@@ -1,12 +1,12 @@
-name = "ghoti-preview-worker"
+name = "ghoti-worker"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
-# এইখানে আপনার ডোমেইন বসিয়ে দেন - তাহলে আর আলাদা Route করা লাগবে না
+# আপনার ৪ টা লিংকই কভার করবে
 [[routes]]
-pattern = "ghotimarket.com/*"
+pattern = "ghotimarket.com/landing/product*"
 zone_name = "ghotimarket.com"
 
 [[routes]]
-pattern = "www.ghotimarket.com/*"
+pattern = "www.ghotimarket.com/landing/product*"
 zone_name = "ghotimarket.com"
