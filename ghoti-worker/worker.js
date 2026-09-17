@@ -2,8 +2,14 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const userAgent = (request.headers.get("user-agent") || "").toLowerCase();
-    const slug = extractSlug(url);
 
+    // শুধু /landing/product এবং /landing/product.html এই ২ টা পাথেই কাজ করবে
+    const isLandingPath = url.pathname === "/landing/product" || url.pathname === "/landing/product.html";
+    if (!isLandingPath) {
+      return fetch(request);
+    }
+
+    const slug = extractSlug(url);
     if (!slug) {
       return fetch(request);
     }
@@ -50,7 +56,7 @@ function extractSlug(url) {
     if (trackingKeys.includes(candidate.split('=')[0])) {
       return null;
     }
-    return candidate.split('=')[0];
+    return candidate.split('=')[0]; // i-phone
   }
   return null;
 }
@@ -58,7 +64,6 @@ function extractSlug(url) {
 async function fetchProductFromFirebaseStructuredQuery(slug, env) {
   const projectId = "ghotimarket";
   const firestoreQueryUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`;
-
   const queryPayload = {
     structuredQuery: {
       from: [{ collectionId: "landing_product" }],
@@ -72,7 +77,6 @@ async function fetchProductFromFirebaseStructuredQuery(slug, env) {
       limit: 1
     }
   };
-
   try {
     const response = await fetch(firestoreQueryUrl, {
       method: "POST",
@@ -99,15 +103,12 @@ function generateSocialPreviewHTML(product, currentUrl) {
   const title = `${product.productName} | GHOTI MARKET`;
   const description = product.productDescription.substring(0, 160);
   const image = (product.productImage && product.productImage.length > 0)? product.productImage[0] : "https://www.ghotimarket.com/watermark.png";
-
   const html = `<!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}">
-
-    <!-- Open Graph - For Big Card -->
     <meta property="og:type" content="product">
     <meta property="og:site_name" content="Ghoti Market">
     <meta property="og:url" content="${escapeHtml(currentUrl)}">
@@ -118,33 +119,19 @@ function generateSocialPreviewHTML(product, currentUrl) {
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/jpeg">
-
-    <!-- Twitter / WhatsApp Large Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="${escapeHtml(currentUrl)}">
     <meta name="twitter:title" content="${escapeHtml(title)}">
     <meta name="twitter:description" content="${escapeHtml(description)}">
     <meta name="twitter:image" content="${escapeHtml(image)}">
 </head>
-<body>
-    <h1>${escapeHtml(product.productName)}</h1>
-    <p>${escapeHtml(description)}</p>
-</body>
+<body><h1>${escapeHtml(product.productName)}</h1></body>
 </html>`;
-
   return new Response(html, {
-    headers: {
-      "Content-Type": "text/html;charset=UTF-8",
-      "Cache-Control": "public, max-age=3600"
-    },
+    headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "public, max-age=3600" },
   });
 }
 
 function escapeHtml(str) {
   if (!str) return "";
-  return str.replace(/&/g, "&amp;")
-           .replace(/</g, "&lt;")
-           .replace(/>/g, "&gt;")
-           .replace(/"/g, "&quot;")
-           .replace(/'/g, "&#039;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
