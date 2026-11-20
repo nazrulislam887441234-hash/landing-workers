@@ -3,9 +3,11 @@ export default {
     const url = new URL(request.url);
     const userAgent = (request.headers.get("user-agent") || "").toLowerCase();
 
-    // শুধু /landing/product এবং /landing/product.html এই ২ টা পাথেই কাজ করবে
-    const isLandingPath = url.pathname === "/landing/product" || url.pathname === "/landing/product.html";
-    if (!isLandingPath) {
+    // এখন শুধু landing সাবডোমেইনে কাজ করবে
+    const isLandingHost = url.hostname === "landing.ghotimarket.com";
+    const isLandingPath = url.pathname === "/product" || url.pathname === "/product.html" || url.pathname.startsWith("/product/");
+    
+    if (!isLandingHost || !isLandingPath) {
       return fetch(request);
     }
 
@@ -46,17 +48,34 @@ export default {
 };
 
 function extractSlug(url) {
+  // ১. প্রথমে /product/i-phone এই স্টাইলে চেক করবো
+  // যেমন: landing.ghotimarket.com/product/i-phone
+  if (url.pathname.startsWith("/product/")) {
+    const pathSlug = url.pathname.replace("/product/", "").replace(".html", "").trim();
+    if (pathSlug) return decodeURIComponent(pathSlug);
+  }
+
+  // ২. তারপর ?i-phone এই স্টাইলে চেক করবো
+  const searchParams = new URLSearchParams(url.search);
+  
+  // যদি ?slug=i-phone থাকে, তাইলে এইটা নিবো
+  if (searchParams.has("slug")) {
+    return searchParams.get("slug");
+  }
+  
+  // যদি ?i-phone থাকে, তাইলে এইটা নিবো
   const searchStr = url.search;
-  if (!searchStr) return null;
-  let cleanQuery = searchStr.substring(1);
-  let parts = cleanQuery.split(/[?&]/);
-  if (parts.length > 0 && parts[0]) {
-    let candidate = decodeURIComponent(parts[0].trim());
-    const trackingKeys = ['fbclid', 'gclid', 'dclid', 'msclkid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'ref', 'source'];
-    if (trackingKeys.includes(candidate.split('=')[0])) {
-      return null;
+  if (searchStr) {
+    let cleanQuery = searchStr.substring(1);
+    let parts = cleanQuery.split(/[?&]/);
+    // fbclid, utm_ এইগুলা বাদ দিবো
+    for (let part of parts) {
+      let key = part.split('=')[0];
+      if (['fbclid','gclid','dclid','msclkid','utm_source','utm_medium','utm_campaign','utm_term','utm_content','ref','source'].includes(key)) {
+        continue;
+      }
+      if (key) return decodeURIComponent(key);
     }
-    return candidate.split('=')[0]; // i-phone
   }
   return null;
 }
