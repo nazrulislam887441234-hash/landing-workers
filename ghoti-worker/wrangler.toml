@@ -5,9 +5,9 @@ workers_dev = true
 
 # GHOTI MARKET landing product URLs
 [[routes]]
-pattern = "ghotimarket.com/landing/product*"
+pattern = "landing.ghotimarket.com/product*"
 zone_name = "ghotimarket.com"
 
 [[routes]]
-pattern = "www.ghotimarket.com/landing/product*"
+pattern = "landing.ghotimarket.com/product.html*"
 zone_name = "ghotimarket.com"
